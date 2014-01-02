@@ -1,0 +1,3 @@
+name: AdePlugin
+main: se.ade.minecraft.adeplugin.AdePlugin
+version: 1
