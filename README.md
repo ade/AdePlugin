@@ -17,7 +17,7 @@ A warp source or destination looks from above like:
 WTW
  W
 ```
-Where W is Wool, and T is a special teleporter block, with a stone pressure plate on top. The color of the wool around defines the destination. If multiple destinations exist, a random one is selected. This makes this feature unsafe with untrusted players, as warps can be hijacked.
+Where W is Wool, and T is a special teleporter block, with a stone pressure plate on top. The color of the wool around defines the destination. If multiple destinations exist, a random one is selected. This makes this feature unsafe with untrusted players, as warps can be hijacked. The ordering of the wool blocks is not important, just the amounts of each color.
 
 Warp block recipe (4 Redstone, 4 Gold Ingot, Ender Pearl):
 
