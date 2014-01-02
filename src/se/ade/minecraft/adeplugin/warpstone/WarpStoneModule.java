@@ -94,8 +94,8 @@ public class WarpStoneModule implements Listener, SubModule {
     private void addDestinationStoneRecipe() {
         destinationRecipe = new ShapedRecipe(getDestinationItem());
         destinationRecipe.shape("ABA", "BCB", "ABA");
-        destinationRecipe.setIngredient('A', Material.COAL);
-        destinationRecipe.setIngredient('B', Material.REDSTONE);
+        destinationRecipe.setIngredient('A', Material.REDSTONE);
+        destinationRecipe.setIngredient('B', Material.COAL);
         destinationRecipe.setIngredient('C', Material.ENDER_PEARL);
         plugin.getServer().addRecipe(destinationRecipe);
     }
@@ -201,10 +201,8 @@ public class WarpStoneModule implements Listener, SubModule {
 
                     if(warpStone.getSignature() == null) {
                         modified = true;
-                        plugin.getLogger().info("a");
                     } else if(!warpStone.getSignature().equals(newSignature)) {
                         modified = true;
-                        plugin.getLogger().info("b");
                     }
                 } else if(warpStone.getSignature() != null) {
                     newSignature = null;
@@ -214,7 +212,6 @@ public class WarpStoneModule implements Listener, SubModule {
                 if(modified) {
                     warpStone.setSignature(newSignature);
                     repository.saveStone(warpStone);
-                    plugin.getLogger().info("saving");
                 }
             }
         }
@@ -223,7 +220,7 @@ public class WarpStoneModule implements Listener, SubModule {
     @EventHandler
     public void onEvent(AsyncPlayerChatEvent event) {
 
-        if(event.getMessage().contains("itamz")) {
+        if(event.getMessage().contains("-warp-items") && plugin.isDevMode()) {
             ItemStack[] kit = new ItemStack[27];
             for(int i = 0; i < DyeColor.values().length; i++) {
                 DyeColor color = DyeColor.values()[i];

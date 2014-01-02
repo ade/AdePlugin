@@ -53,6 +53,14 @@ public class AdePlugin extends JavaPlugin {
         for(SubModule subModule : activeModules) {
             subModule.onEnable(this);
         }
+
+        if(isDevMode()) {
+            getLogger().warning("Development mode is enabled.");
+        }
+    }
+
+    public boolean isDevMode() {
+        return getConfig().getBoolean("development_mode");
     }
 
     @Override
