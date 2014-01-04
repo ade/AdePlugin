@@ -1,8 +1,8 @@
 package se.ade.minecraft.adeplugin.db;
 
 
+import com.mysql.jdbc.CommunicationsException;
 import org.bukkit.plugin.Plugin;
-import se.ade.minecraft.adeplugin.AdePlugin;
 
 import java.sql.*;
 
@@ -16,6 +16,11 @@ public class DbConnection {
 
     public DbConnection(Plugin plugin) {
         this.plugin = plugin;
+    }
+
+    private void onSqlError(SQLException e, String query) {
+        plugin.getLogger().info("Problem executing query '" + query + "': " + e.toString());
+        e.printStackTrace();
     }
 
     public void connect() {
@@ -32,42 +37,72 @@ public class DbConnection {
         }
     }
 
-    public ResultSet query(String query, Object... arguments) {
+    private void validateConnection() {
         try {
-            PreparedStatement statement = connection.prepareStatement(query);
-            for(int i = 0; i < arguments.length; i++) {
-                if(arguments[i] == null) {
-                    statement.setString(i+1, null);
-                } else {
-                    statement.setString(i+1, arguments[i].toString());
-                }
+            if(connection == null || connection.isClosed()) {
+                plugin.getLogger().info("Reconnecting to database...");
+                connect();
             }
-            return statement.executeQuery();
         } catch (SQLException e) {
-            plugin.getLogger().info("Problem executing query '" + query + "': " + e.toString());
+            plugin.getLogger().info("Database re-connection failed");
             e.printStackTrace();
         }
+    }
 
+    private ResultSet executeAsQuery(String query, Object... arguments) throws SQLException {
+        validateConnection();
+        PreparedStatement statement = connection.prepareStatement(query);
+        for(int i = 0; i < arguments.length; i++) {
+            if(arguments[i] == null) {
+                statement.setString(i+1, null);
+            } else {
+                statement.setString(i+1, arguments[i].toString());
+            }
+        }
+        return statement.executeQuery();
+    }
+
+    public ResultSet query(String query, Object... arguments) {
+        try {
+            return executeAsQuery(query, arguments);
+        } catch (SQLException ce) {
+            //Retry once since the connection may be restored.
+            try {
+                plugin.getLogger().info("Retrying query...");
+                return executeAsQuery(query, arguments);
+            } catch (SQLException e2) {
+                onSqlError(e2, query);
+            }
+        }
         return null;
+    }
+
+    private int executeAsUpdate(String query, Object... arguments) throws SQLException {
+        validateConnection();
+        PreparedStatement statement = connection.prepareStatement(query);
+        for(int i = 0; i < arguments.length; i++) {
+            if(arguments[i] == null) {
+                statement.setString(i+1, null);
+            } else {
+                statement.setString(i+1, arguments[i].toString());
+            }
+        }
+
+        return statement.executeUpdate();
     }
 
     public int update(String query, Object... arguments) {
         try {
-            PreparedStatement statement = connection.prepareStatement(query);
-            for(int i = 0; i < arguments.length; i++) {
-                if(arguments[i] == null) {
-                    statement.setString(i+1, null);
-                } else {
-                    statement.setString(i+1, arguments[i].toString());
-                }
-            }
-
-            return statement.executeUpdate();
+            return executeAsUpdate(query, arguments);
         } catch (SQLException e) {
-            plugin.getLogger().info("Problem executing statement '" + query + "': " + e.toString());
-            e.printStackTrace();
+            //Retry once since the connection may be restored.
+            try {
+                plugin.getLogger().info("Retrying update...");
+                return executeAsUpdate(query, arguments);
+            } catch (SQLException e2) {
+                onSqlError(e2, query);
+            }
         }
-
         return 0;
     }
 }
