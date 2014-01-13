@@ -1,17 +1,16 @@
 package se.ade.minecraft.adeplugin.warpstone;
 
-import org.bukkit.ChatColor;
-import org.bukkit.DyeColor;
-import org.bukkit.Location;
-import org.bukkit.Material;
+import org.bukkit.*;
 import org.bukkit.block.Block;
 import org.bukkit.block.BlockFace;
+import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
 import org.bukkit.event.block.Action;
 import org.bukkit.event.block.BlockBreakEvent;
 import org.bukkit.event.block.BlockPlaceEvent;
 import org.bukkit.event.player.AsyncPlayerChatEvent;
+import org.bukkit.event.player.PlayerEvent;
 import org.bukkit.event.player.PlayerInteractEvent;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.ShapedRecipe;
@@ -112,12 +111,20 @@ public class WarpStoneModule implements Listener, SubModule {
                     if(source != null && source.isSource()) {
                         WarpStone target = repository.findBySignature(signature, new Coords(block.getRelative(BlockFace.DOWN).getLocation()), false);
                         if(target != null) {
-                            Location location = new Location(target.getWorld(), target.getCoords().x + 0.5, target.getCoords().y+1, target.getCoords().z + 0.5, ev.getPlayer().getLocation().getYaw(), ev.getPlayer().getLocation().getPitch());
-                            ev.getPlayer().teleport(location);
+                            teleport(ev, target);
                         }
                     }
                 }
             }
+        }
+    }
+
+    private void teleport(PlayerEvent event, WarpStone target) {
+        Location location = new Location(target.getWorld(), target.getCoords().x + 0.5, target.getCoords().y+1, target.getCoords().z + 0.5, event.getPlayer().getLocation().getYaw(), event.getPlayer().getLocation().getPitch());
+        Player player = event.getPlayer();
+
+        if (location.getChunk().load(false)) {
+            player.teleport(location);
         }
     }
 
