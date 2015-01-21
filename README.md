@@ -3,6 +3,7 @@ AdePlugin
 
 a minecraft (craftbukkit) plugin
 
+tested working with CraftBukkit/Spigot 1.8
 
 Features
 ========
@@ -30,3 +31,5 @@ Warp destination block recipe (4 Redstone, 4 Coal, Ender Pearl):
 Warp placement example:
 
 ![Warp teleporter recipe](/images/warp_example.png)
+
+As four wool blocks are selected in an unordered fashion from a pool of 16 different colors, the number of possible warp destinations is 3876.
