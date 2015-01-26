@@ -1,6 +1,7 @@
 package se.ade.minecraft.adeplugin.warpstone;
 
 import org.bukkit.World;
+import org.bukkit.block.Block;
 import se.ade.minecraft.adeplugin.util.Coords;
 
 /**
@@ -18,6 +19,10 @@ public class WarpStone {
         this.world = world;
         this.signature = signature;
         this.isSource = isSource;
+    }
+
+    public Block getBlock() {
+        return world.getBlockAt((int)coords.x, (int)coords.y, (int)coords.z);
     }
 
     public Coords getCoords() {

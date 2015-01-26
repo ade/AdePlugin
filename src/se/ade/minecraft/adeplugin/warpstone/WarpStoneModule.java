@@ -176,6 +176,7 @@ public class WarpStoneModule implements Listener, SubModule {
             WarpStone target = repository.findBySignature(signature, new Coords(warpBlock.getLocation()), !isSource);
             if(target != null) {
                 playEnableEffect(warpBlock);
+                playEnableEffect(target.getBlock());
             }
         }
     }
@@ -268,6 +269,7 @@ public class WarpStoneModule implements Listener, SubModule {
                 }
 
                 if(modified) {
+                    WarpStoneSignature oldSignature = warpStone.getSignature();
                     warpStone.setSignature(newSignature);
                     repository.saveStone(warpStone);
 
@@ -275,6 +277,16 @@ public class WarpStoneModule implements Listener, SubModule {
                         playEnableEffectIfLinked(block, warpStone.isSource());
                     } else {
                         playDisableEffect(block);
+
+                        //Check if there are any other sister arrangements, otherwise play effect on both sides
+                        WarpStone target = repository.findBySignature(oldSignature, new Coords(block.getLocation()), warpStone.isSource());
+                        if(target == null) {
+                            //No other of the same type.
+
+                            //TODO: Find all destinations/sources rather than one random
+                            WarpStone otherStone = repository.findBySignature(oldSignature, new Coords(block.getLocation()), !warpStone.isSource());
+                            playDisableEffect(otherStone.getBlock());
+                        }
                     }
                 }
             }
@@ -306,10 +318,6 @@ public class WarpStoneModule implements Listener, SubModule {
 
                 event.getPlayer().getInventory().clear();
                 event.getPlayer().getInventory().addItem(kit);
-            } else if (event.getMessage().contains("-place1")) {
-                playEnableEffect(event.getPlayer().getLocation().getBlock());
-            } else if (event.getMessage().contains("-place2")) {
-
             }
         }
     }
