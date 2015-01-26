@@ -121,13 +121,24 @@ public class WarpStoneModule implements Listener, SubModule {
         }
     }
 
-    private void teleport(PlayerEvent event, WarpStone target) {
-        Location location = new Location(target.getWorld(), target.getCoords().x + 0.5, target.getCoords().y+1, target.getCoords().z + 0.5, event.getPlayer().getLocation().getYaw(), event.getPlayer().getLocation().getPitch());
+    private void teleport(PlayerEvent event, final WarpStone target) {
+        final Location location = new Location(target.getWorld(), target.getCoords().x + 0.5, target.getCoords().y+1, target.getCoords().z + 0.5, event.getPlayer().getLocation().getYaw(), event.getPlayer().getLocation().getPitch());
         Player player = event.getPlayer();
+
+        event.getPlayer().getWorld().playEffect(player.getLocation(), Effect.MOBSPAWNER_FLAMES, 0);
+        event.getPlayer().getWorld().playSound(player.getLocation(), Sound.ENDERMAN_TELEPORT, 1, 1.2f);
 
         if (location.getChunk().load(false)) {
             player.teleport(location);
         }
+
+        plugin.getServer().getScheduler().runTaskLater(plugin, new Runnable() {
+            @Override
+            public void run() {
+                target.getWorld().playEffect(location, Effect.MOBSPAWNER_FLAMES, 0);
+                target.getWorld().playSound(location, Sound.ENDERMAN_TELEPORT, 1, 1.3f);
+            }
+        }, 2);
     }
 
     private boolean isSourceWarpStoneItem(ItemStack item) {
