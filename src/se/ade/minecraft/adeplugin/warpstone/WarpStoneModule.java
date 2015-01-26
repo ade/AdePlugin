@@ -21,7 +21,9 @@ import se.ade.minecraft.adeplugin.infrastructure.SubModule;
 import se.ade.minecraft.adeplugin.util.Coords;
 
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 
 /**
  * Adrian Nilsson
@@ -152,8 +154,13 @@ public class WarpStoneModule implements Listener, SubModule {
             ItemStack item = event.getItemInHand();
 
             if(isSourceWarpStoneItem(item) || isDestinationWarpStoneItem(item)) {
+                boolean isSource = isSourceWarpStoneItem(item);
+
                 //Placing a warp stone or destination.
-                repository.saveStone(new WarpStone(new Coords(event.getBlockPlaced().getLocation()), event.getBlockPlaced().getWorld(), getWarpSignature(event.getBlockPlaced()), isSourceWarpStoneItem(item)));
+                repository.saveStone(new WarpStone(new Coords(event.getBlockPlaced().getLocation()), event.getBlockPlaced().getWorld(), getWarpSignature(event.getBlockPlaced()), isSource));
+
+                //Play a linked effect if there is a corresponding warp arrangement.
+                playEnableEffectIfLinked(event.getBlockPlaced(), isSource);
             }
         } else if(event.getBlockPlaced().getType() == Material.WOOL) {
             updateWarpStoneIfExists(event.getBlockPlaced().getRelative(BlockFace.NORTH), false);
@@ -161,6 +168,59 @@ public class WarpStoneModule implements Listener, SubModule {
             updateWarpStoneIfExists(event.getBlockPlaced().getRelative(BlockFace.WEST), false);
             updateWarpStoneIfExists(event.getBlockPlaced().getRelative(BlockFace.EAST), false);
         }
+    }
+
+    private void playEnableEffectIfLinked(Block warpBlock, boolean isSource) {
+        WarpStoneSignature signature = getWarpSignature(warpBlock);
+        if(signature != null) {
+            WarpStone target = repository.findBySignature(signature, new Coords(warpBlock.getLocation()), !isSource);
+            if(target != null) {
+                playEnableEffect(warpBlock);
+            }
+        }
+    }
+
+    private void playEnableEffect(Block warpBlock) {
+        final Location location = warpBlock.getRelative(BlockFace.UP).getLocation();
+        warpBlock.getWorld().playEffect(location, Effect.ENDER_SIGNAL, 0);
+
+        final World world = warpBlock.getWorld();
+        world.playSound(location, Sound.ENDERMAN_TELEPORT, 1, 0.7f);
+        plugin.getServer().getScheduler().runTaskLater(plugin, new Runnable() {
+            @Override
+            public void run() {
+                world.playSound(location, Sound.NOTE_BASS_DRUM, 1f, 0.5f);
+                world.playSound(location, Sound.ENDERDRAGON_GROWL, 0.1f, 0.5f);
+                world.playSound(location, Sound.ENDERMAN_TELEPORT, 0.4f, 1.5f);
+                world.playSound(location, Sound.FUSE, 1f, 1.1f);
+            }
+        }, 22);
+
+        plugin.getServer().getScheduler().runTaskLater(plugin, new Runnable() {
+            @Override
+            public void run() {
+                world.playSound(location, Sound.ENDERMAN_TELEPORT, 0.6f, 2.0f);
+            }
+        }, 28);
+
+    }
+
+    private void playDisableEffect(Block warpBlock) {
+        final Location location = warpBlock.getRelative(BlockFace.UP).getLocation();
+        warpBlock.getWorld().playEffect(location, Effect.SMOKE, 4);
+        warpBlock.getWorld().playSound(location, Sound.FIZZ, 0.2f, 0.7f);
+    }
+
+    private Set<Player> getPlayersInRange(int range, Location origin) {
+        Set<Player> back = new HashSet<Player>();
+        for (Player p : Bukkit.getOnlinePlayers()) {
+            if (p.getWorld().equals(origin.getWorld())) {
+                if (p.getLocation().distanceSquared(origin) <= range) {
+                    back.add(p);
+                }
+            }
+        }
+        return back;
     }
 
     @EventHandler
@@ -219,38 +279,48 @@ public class WarpStoneModule implements Listener, SubModule {
                 if(modified) {
                     warpStone.setSignature(newSignature);
                     repository.saveStone(warpStone);
+
+                    if(newSignature != null) {
+                        playEnableEffectIfLinked(block, warpStone.isSource());
+                    } else {
+                        playDisableEffect(block);
+                    }
                 }
             }
         }
     }
 
     @EventHandler
-    public void onEvent(AsyncPlayerChatEvent event) {
+    public void onEvent(final AsyncPlayerChatEvent event) {
+        if(plugin.isDevMode()) {
+            if (event.getMessage().contains("-warp-items")) {
+                ItemStack[] kit = new ItemStack[27];
+                for (int i = 0; i < DyeColor.values().length; i++) {
+                    DyeColor color = DyeColor.values()[i];
+                    kit[i] = new Wool(color).toItemStack(64);
+                }
 
-        if(event.getMessage().contains("-warp-items") && plugin.isDevMode()) {
-            ItemStack[] kit = new ItemStack[27];
-            for(int i = 0; i < DyeColor.values().length; i++) {
-                DyeColor color = DyeColor.values()[i];
-                kit[i] = new Wool(color).toItemStack(64);
+                kit[16] = new ItemStack(Material.COAL, 64);
+                kit[17] = new ItemStack(Material.GOLD_INGOT, 64);
+                kit[18] = new ItemStack(Material.ENDER_PEARL, 64);
+                kit[19] = new ItemStack(Material.REDSTONE, 64);
+                kit[20] = new ItemStack(Material.DIAMOND_PICKAXE, 64);
+                kit[21] = new ItemStack(Material.TORCH, 64);
+                kit[22] = new ItemStack(Material.IRON_INGOT, 64);
+                kit[23] = new ItemStack(Material.STONE_PLATE, 64);
+                kit[24] = new ItemStack(Material.WOOD, 64);
+                kit[25] = getSourceItem();
+                kit[26] = getDestinationItem();
+
+
+                event.getPlayer().getInventory().clear();
+                event.getPlayer().getInventory().addItem(kit);
+            } else if (event.getMessage().contains("-place1")) {
+                playEnableEffect(event.getPlayer().getLocation().getBlock());
+            } else if (event.getMessage().contains("-place2")) {
+
             }
-
-            kit[16] = new ItemStack(Material.COAL, 64);
-            kit[17] = new ItemStack(Material.GOLD_INGOT, 64);
-            kit[18] = new ItemStack(Material.ENDER_PEARL, 64);
-            kit[19] = new ItemStack(Material.REDSTONE, 64);
-            kit[20] = new ItemStack(Material.DIAMOND_PICKAXE, 64);
-            kit[21] = new ItemStack(Material.TORCH, 64);
-            kit[22] = new ItemStack(Material.IRON_INGOT, 64);
-            kit[23] = new ItemStack(Material.STONE_PLATE, 64);
-            kit[24] = new ItemStack(Material.WOOD, 64);
-            kit[25] = getSourceItem();
-            kit[26] = getDestinationItem();
-
-
-            event.getPlayer().getInventory().clear();
-            event.getPlayer().getInventory().addItem(kit);
         }
-
     }
 
     /**
