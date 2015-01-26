@@ -189,20 +189,11 @@ public class WarpStoneModule implements Listener, SubModule {
         plugin.getServer().getScheduler().runTaskLater(plugin, new Runnable() {
             @Override
             public void run() {
-                world.playSound(location, Sound.NOTE_BASS_DRUM, 1f, 0.5f);
+                world.playSound(location, Sound.NOTE_BASS_DRUM, 1f, 0.3f);
                 world.playSound(location, Sound.ENDERDRAGON_GROWL, 0.1f, 0.5f);
-                world.playSound(location, Sound.ENDERMAN_TELEPORT, 0.4f, 1.5f);
                 world.playSound(location, Sound.FUSE, 1f, 1.1f);
             }
         }, 22);
-
-        plugin.getServer().getScheduler().runTaskLater(plugin, new Runnable() {
-            @Override
-            public void run() {
-                world.playSound(location, Sound.ENDERMAN_TELEPORT, 0.6f, 2.0f);
-            }
-        }, 28);
-
     }
 
     private void playDisableEffect(Block warpBlock) {
