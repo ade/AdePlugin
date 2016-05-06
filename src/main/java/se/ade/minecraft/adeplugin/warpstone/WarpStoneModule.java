@@ -126,7 +126,7 @@ public class WarpStoneModule implements Listener, SubModule {
         Player player = event.getPlayer();
 
         event.getPlayer().getWorld().playEffect(player.getLocation(), Effect.MOBSPAWNER_FLAMES, 0);
-        event.getPlayer().getWorld().playSound(player.getLocation(), Sound.ENDERMAN_TELEPORT, 1, 1.2f);
+        event.getPlayer().getWorld().playSound(player.getLocation(), Sound.ENTITY_ENDERMEN_TELEPORT, 1, 1.2f);
 
         if (location.getChunk().load(false)) {
             player.teleport(location);
@@ -136,7 +136,7 @@ public class WarpStoneModule implements Listener, SubModule {
             @Override
             public void run() {
                 target.getWorld().playEffect(location, Effect.MOBSPAWNER_FLAMES, 0);
-                target.getWorld().playSound(location, Sound.ENDERMAN_TELEPORT, 1, 1.3f);
+                target.getWorld().playSound(location, Sound.ENTITY_ENDERMEN_TELEPORT, 1, 1.3f);
             }
         }, 2);
     }
@@ -197,13 +197,13 @@ public class WarpStoneModule implements Listener, SubModule {
         warpBlock.getWorld().playEffect(location, Effect.ENDER_SIGNAL, 0);
 
         final World world = warpBlock.getWorld();
-        world.playSound(location, Sound.ENDERMAN_TELEPORT, 1, 0.7f);
+        world.playSound(location, Sound.ENTITY_ENDERMEN_TELEPORT, 1, 0.7f);
         plugin.getServer().getScheduler().runTaskLater(plugin, new Runnable() {
             @Override
             public void run() {
-                world.playSound(location, Sound.NOTE_BASS_DRUM, 1f, 0.3f);
-                world.playSound(location, Sound.ENDERDRAGON_GROWL, 0.1f, 0.5f);
-                world.playSound(location, Sound.FUSE, 1f, 1.1f);
+                world.playSound(location, Sound.BLOCK_NOTE_BASS, 1f, 0.3f);
+                world.playSound(location, Sound.ENTITY_ENDERDRAGON_GROWL, 0.1f, 0.5f);
+                world.playSound(location, Sound.ENTITY_TNT_PRIMED, 1f, 1.1f);
             }
         }, 22);
     }
@@ -211,7 +211,7 @@ public class WarpStoneModule implements Listener, SubModule {
     private void playDisableEffect(Block warpBlock) {
         final Location location = warpBlock.getRelative(BlockFace.UP).getLocation();
         warpBlock.getWorld().playEffect(location, Effect.SMOKE, 4);
-        warpBlock.getWorld().playSound(location, Sound.FIZZ, 0.2f, 0.7f);
+        warpBlock.getWorld().playSound(location, Sound.ENTITY_GENERIC_EXTINGUISH_FIRE, 0.2f, 0.7f);
     }
 
     private Set<Player> getPlayersInRange(int range, Location origin) {
