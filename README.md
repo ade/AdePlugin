@@ -3,7 +3,7 @@ AdePlugin
 
 a minecraft (craftbukkit) plugin
 
-tested working with CraftBukkit/Spigot 1.8
+tested working with CraftBukkit/Spigot 1.9.2
 
 Features
 ========
