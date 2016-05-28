@@ -122,15 +122,36 @@ public class WarpStoneModule implements Listener, SubModule {
     }
 
     private void teleport(PlayerEvent event, final WarpStone target) {
-        final Location destinationLocation = new Location(target.getWorld(), target.getCoords().x + 0.5, target.getCoords().y+1, target.getCoords().z + 0.5, event.getPlayer().getLocation().getYaw(), event.getPlayer().getLocation().getPitch());
+        float yaw = event.getPlayer().getLocation().getYaw();
+        if(target.getYaw() != null) {
+            yaw = target.getYaw();
+        }
+
+        Block above = target.getBlock().getRelative(BlockFace.UP);
+        double teleportHeight = target.getCoords().y + 1.1;
+        while (above != null && (!above.isEmpty() && !above.isLiquid())) {
+            above = above.getRelative(BlockFace.UP);
+            teleportHeight++;
+        }
+
+        final Location destinationLocation = new Location(target.getWorld(), target.getCoords().x + 0.5, teleportHeight, target.getCoords().z + 0.5, yaw, event.getPlayer().getLocation().getPitch());
         final Player player = event.getPlayer();
 
         event.getPlayer().getWorld().playEffect(player.getLocation(), Effect.MOBSPAWNER_FLAMES, 0);
         event.getPlayer().getWorld().playSound(player.getLocation(), Sound.ENTITY_ENDERMEN_TELEPORT, 1, 1.2f);
 
-        if (target.getWorld().loadChunk(target.getBlock().getX(), target.getBlock().getZ(), false)) {
-            player.teleport(destinationLocation);
+        target.getWorld().loadChunk((int)(target.getCoords().x >> 4), (int)(target.getCoords().z >> 4), true);
+
+        Chunk chunk = target.getBlock().getChunk();
+        plugin.debugLog("Chunk loaded: " + chunk.isLoaded());
+        if(!chunk.isLoaded()) {
+            boolean loaded = chunk.load();
+            plugin.debugLog("Chunk load returned " + loaded);
         }
+
+        player.sendBlockChange(target.getBlock().getLocation(), target.getBlock().getType(), target.getBlock().getData());
+        player.teleport(destinationLocation);
+        player.sendBlockChange(target.getBlock().getLocation(), target.getBlock().getType(), target.getBlock().getData());
 
         plugin.getServer().getScheduler().runTaskLater(plugin, new Runnable() {
             @Override
@@ -138,10 +159,11 @@ public class WarpStoneModule implements Listener, SubModule {
                 target.getWorld().playEffect(destinationLocation, Effect.MOBSPAWNER_FLAMES, 0);
                 target.getWorld().playSound(destinationLocation, Sound.ENTITY_ENDERMEN_TELEPORT, 1, 1.3f);
 
-                //Re-teleport after transmitting chunk (experimental)
+                //Re-teleport to avoid falling(experimental)
                 player.teleport(destinationLocation);
+                player.sendBlockChange(target.getBlock().getLocation(), target.getBlock().getType(), target.getBlock().getData());
             }
-        }, 50);
+        }, 2);
     }
 
     private boolean isSourceWarpStoneItem(ItemStack item) {
@@ -171,7 +193,7 @@ public class WarpStoneModule implements Listener, SubModule {
                 boolean isSource = isSourceWarpStoneItem(item);
 
                 //Placing a warp stone or destination.
-                repository.saveStone(new WarpStone(new Coords(event.getBlockPlaced().getLocation()), event.getBlockPlaced().getWorld(), getWarpSignature(event.getBlockPlaced()), isSource));
+                repository.saveStone(new WarpStone(new Coords(event.getBlockPlaced().getLocation()), event.getPlayer().getLocation().getYaw(), event.getBlockPlaced().getWorld(), getWarpSignature(event.getBlockPlaced()), isSource));
 
                 //Play a linked effect if there is a corresponding warp arrangement.
                 playEnableEffectIfLinked(event.getBlockPlaced(), isSource);

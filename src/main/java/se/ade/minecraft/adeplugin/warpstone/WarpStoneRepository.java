@@ -64,8 +64,14 @@ public class WarpStoneRepository {
                 resultSet.getInt("z")
             );
 
+            Float yaw = resultSet.getFloat("yaw");
+            if(resultSet.wasNull()) {
+                yaw = null;
+            }
+
             return new WarpStone(
                 coords,
+                yaw,
                 AdePlugin.get().getServer().getWorld(resultSet.getString("world")),
                 WarpStoneSignature.fromData(resultSet.getString("signature")),
                 resultSet.getBoolean("is_source")
@@ -84,7 +90,7 @@ public class WarpStoneRepository {
     public void saveStone(WarpStone warpStone) {
         deleteStone(warpStone);
         String signatureData = warpStone.getSignature() != null ? warpStone.getSignature().getData() : null;
-        db.update("INSERT INTO warpstones (x,y,z,world,is_source,signature) VALUES (?,?,?,?,?,?)", warpStone.getCoords().x, warpStone.getCoords().y, warpStone.getCoords().z, warpStone.getWorld().getName(), warpStone.isSource() ? "1" : "0", signatureData);
+        db.update("INSERT INTO warpstones (x,y,z,yaw,world,is_source,signature) VALUES (?,?,?,?,?,?,?)", warpStone.getCoords().x, warpStone.getCoords().y, warpStone.getCoords().z, warpStone.getYaw(), warpStone.getWorld().getName(), warpStone.isSource() ? "1" : "0", signatureData);
     }
 
     public boolean deleteStone(WarpStone warpStone) {

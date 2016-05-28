@@ -13,14 +13,19 @@ public class WarpStone {
     private World world;
     private WarpStoneSignature signature;
     private boolean isSource;
+    private Float yaw;
 
-    public WarpStone(Coords coords, World world, WarpStoneSignature signature, boolean isSource) {
+    public WarpStone(Coords coords, Float yaw, World world, WarpStoneSignature signature, boolean isSource) {
         this.coords = coords;
         this.world = world;
+        this.yaw = yaw;
         this.signature = signature;
         this.isSource = isSource;
     }
 
+    /**
+     * Return the block containing the warp stone (Note, not the block above it)
+     */
     public Block getBlock() {
         return world.getBlockAt((int)coords.x, (int)coords.y, (int)coords.z);
     }
@@ -47,5 +52,13 @@ public class WarpStone {
 
     public void setSignature(WarpStoneSignature signature) {
         this.signature = signature;
+    }
+
+    public Float getYaw() {
+        return yaw;
+    }
+
+    public void setYaw(Float yaw) {
+        this.yaw = yaw;
     }
 }
