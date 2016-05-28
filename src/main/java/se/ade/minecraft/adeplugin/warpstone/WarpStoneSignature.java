@@ -21,7 +21,15 @@ public class WarpStoneSignature {
         data = materialsToData(materials);
     }
 
-    public static boolean validateMaterials(Block[] materials) {
+    public static WarpStoneSignature fromData(String s) {
+        if(s == null) {
+            return null;
+        } else {
+            return new WarpStoneSignature(s);
+        }
+    }
+
+    public static boolean isSignatureMaterial(Block[] materials) {
         for(int i = 0; i < materials.length; i++) {
             if(materials[i].getType() != Material.WOOL)
                 return false;

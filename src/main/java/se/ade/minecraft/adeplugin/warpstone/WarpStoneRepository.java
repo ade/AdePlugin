@@ -67,7 +67,7 @@ public class WarpStoneRepository {
             return new WarpStone(
                 coords,
                 AdePlugin.get().getServer().getWorld(resultSet.getString("world")),
-                new WarpStoneSignature(resultSet.getString("signature")),
+                WarpStoneSignature.fromData(resultSet.getString("signature")),
                 resultSet.getBoolean("is_source")
             );
         } catch(SQLException e) {

@@ -3,12 +3,14 @@ import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.Recipe;
 import org.bukkit.inventory.ShapedRecipe;
 import org.bukkit.plugin.java.JavaPlugin;
+import se.ade.minecraft.adeplugin.blueprints.BlueprintModule;
 import se.ade.minecraft.adeplugin.db.DbConnection;
 import se.ade.minecraft.adeplugin.infrastructure.SubModule;
 import se.ade.minecraft.adeplugin.warpstone.WarpStoneModule;
 
 import java.util.Iterator;
 import java.util.Map;
+import java.util.logging.Level;
 
 /**
  * Adrian Nilsson
@@ -48,6 +50,8 @@ public class AdePlugin extends JavaPlugin {
 
         activeModules = new SubModule[] {
             new WarpStoneModule()
+            //new BlueprintModule()
+
         };
 
         for(SubModule subModule : activeModules) {
@@ -109,5 +113,11 @@ public class AdePlugin extends JavaPlugin {
 
     public DbConnection getDbConnection() {
         return dbConnection;
+    }
+
+    public void debugLog(String s) {
+        if(isDevMode()) {
+            getLogger().log(Level.INFO, s);
+        }
     }
 }

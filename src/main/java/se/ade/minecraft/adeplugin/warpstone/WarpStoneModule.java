@@ -122,23 +122,26 @@ public class WarpStoneModule implements Listener, SubModule {
     }
 
     private void teleport(PlayerEvent event, final WarpStone target) {
-        final Location location = new Location(target.getWorld(), target.getCoords().x + 0.5, target.getCoords().y+1, target.getCoords().z + 0.5, event.getPlayer().getLocation().getYaw(), event.getPlayer().getLocation().getPitch());
-        Player player = event.getPlayer();
+        final Location destinationLocation = new Location(target.getWorld(), target.getCoords().x + 0.5, target.getCoords().y+1, target.getCoords().z + 0.5, event.getPlayer().getLocation().getYaw(), event.getPlayer().getLocation().getPitch());
+        final Player player = event.getPlayer();
 
         event.getPlayer().getWorld().playEffect(player.getLocation(), Effect.MOBSPAWNER_FLAMES, 0);
         event.getPlayer().getWorld().playSound(player.getLocation(), Sound.ENTITY_ENDERMEN_TELEPORT, 1, 1.2f);
 
-        if (location.getChunk().load(false)) {
-            player.teleport(location);
+        if (target.getWorld().loadChunk(target.getBlock().getX(), target.getBlock().getZ(), false)) {
+            player.teleport(destinationLocation);
         }
 
         plugin.getServer().getScheduler().runTaskLater(plugin, new Runnable() {
             @Override
             public void run() {
-                target.getWorld().playEffect(location, Effect.MOBSPAWNER_FLAMES, 0);
-                target.getWorld().playSound(location, Sound.ENTITY_ENDERMEN_TELEPORT, 1, 1.3f);
+                target.getWorld().playEffect(destinationLocation, Effect.MOBSPAWNER_FLAMES, 0);
+                target.getWorld().playSound(destinationLocation, Sound.ENTITY_ENDERMEN_TELEPORT, 1, 1.3f);
+
+                //Re-teleport after transmitting chunk (experimental)
+                player.teleport(destinationLocation);
             }
-        }, 2);
+        }, 50);
     }
 
     private boolean isSourceWarpStoneItem(ItemStack item) {
@@ -174,10 +177,11 @@ public class WarpStoneModule implements Listener, SubModule {
                 playEnableEffectIfLinked(event.getBlockPlaced(), isSource);
             }
         } else if(event.getBlockPlaced().getType() == Material.WOOL) {
-            updateWarpStoneIfExists(event.getBlockPlaced().getRelative(BlockFace.NORTH), false);
-            updateWarpStoneIfExists(event.getBlockPlaced().getRelative(BlockFace.SOUTH), false);
-            updateWarpStoneIfExists(event.getBlockPlaced().getRelative(BlockFace.WEST), false);
-            updateWarpStoneIfExists(event.getBlockPlaced().getRelative(BlockFace.EAST), false);
+            //Search for adjacent warp stones that may have been affected and update them
+            updateWarpStoneIfExists(event.getBlockPlaced().getRelative(BlockFace.NORTH), null);
+            updateWarpStoneIfExists(event.getBlockPlaced().getRelative(BlockFace.SOUTH), null);
+            updateWarpStoneIfExists(event.getBlockPlaced().getRelative(BlockFace.WEST), null);
+            updateWarpStoneIfExists(event.getBlockPlaced().getRelative(BlockFace.EAST), null);
         }
     }
 
@@ -249,55 +253,55 @@ public class WarpStoneModule implements Listener, SubModule {
             }
         } else if(event.getBlock().getType() == Material.WOOL) {
             //Check if a warpstone has been broken in the adjacent blocks
-            updateWarpStoneIfExists(event.getBlock().getRelative(BlockFace.NORTH), true);
-            updateWarpStoneIfExists(event.getBlock().getRelative(BlockFace.EAST), true);
-            updateWarpStoneIfExists(event.getBlock().getRelative(BlockFace.SOUTH), true);
-            updateWarpStoneIfExists(event.getBlock().getRelative(BlockFace.WEST), true);
+            updateWarpStoneIfExists(event.getBlock().getRelative(BlockFace.NORTH), event.getBlock());
+            updateWarpStoneIfExists(event.getBlock().getRelative(BlockFace.EAST), event.getBlock());
+            updateWarpStoneIfExists(event.getBlock().getRelative(BlockFace.SOUTH), event.getBlock());
+            updateWarpStoneIfExists(event.getBlock().getRelative(BlockFace.WEST), event.getBlock());
         }
 
     }
 
-    private void updateWarpStoneIfExists(Block block, boolean removedBlock) {
+    /**
+     * Makes sure any warp stone potentially existing at <block> (source or destination) has the correct signature stored
+     * */
+    private void updateWarpStoneIfExists(Block block, Block blockPendingRemoval) {
         if(isWarpStoneBlockType(block)) {
             WarpStone warpStone = repository.findByCoords(block);
 
             if(warpStone != null) {
-                boolean modified = false;
-                WarpStoneSignature newSignature = null;
+                WarpStoneSignature worldSignature = getWarpSignature(block, blockPendingRemoval);
+                WarpStoneSignature oldSignature = warpStone.getSignature();
 
-                Block[] adjacent = getAdjacentBlocks(block);
-                if(!removedBlock && WarpStoneSignature.validateMaterials(adjacent)) {
-                    newSignature = new WarpStoneSignature(adjacent);
-
-                    if(warpStone.getSignature() == null) {
-                        modified = true;
-                    } else if(!warpStone.getSignature().equals(newSignature)) {
-                        modified = true;
-                    }
-                } else if(warpStone.getSignature() != null) {
-                    newSignature = null;
-                    modified = true;
+                if(oldSignature != null && oldSignature.equals(worldSignature)) {
+                    //Nothing has been changed, no update needed.
+                    return;
                 }
 
-                if(modified) {
-                    WarpStoneSignature oldSignature = warpStone.getSignature();
-                    warpStone.setSignature(newSignature);
+                if(worldSignature != null) {
+                    //New signature exists
+                    warpStone.setSignature(worldSignature);
+                    repository.saveStone(warpStone);
+                    playEnableEffectIfLinked(block, warpStone.isSource());
+                } else if(oldSignature != null) {
+                    //Had signature before, but does not have a valid signature any more
+                    warpStone.setSignature(null);
                     repository.saveStone(warpStone);
 
-                    if(newSignature != null) {
-                        playEnableEffectIfLinked(block, warpStone.isSource());
-                    } else {
-                        playDisableEffect(block);
+                    plugin.debugLog("Warp stone signature removed at " + block.getLocation().toString());
 
-                        //Check if there are any other sister arrangements, otherwise play effect on both sides
-                        WarpStone target = repository.findBySignature(oldSignature, new Coords(block.getLocation()), warpStone.isSource());
-                        if(target == null) {
-                            //No other of the same type.
+                    //Play fizzle effect on stone
+                    playDisableEffect(block);
 
-                            //TODO: Find all destinations/sources rather than one random
-                            WarpStone otherStone = repository.findBySignature(oldSignature, new Coords(block.getLocation()), !warpStone.isSource());
-                            playDisableEffect(otherStone.getBlock());
-                        }
+                    //Look for other warp stone of same type //TODO: Get all, not just one
+                    WarpStone otherCopy = repository.findBySignature(oldSignature, new Coords(block.getLocation()), warpStone.isSource());
+                    if(otherCopy != null) {
+                        playDisableEffect(otherCopy.getBlock());
+                    }
+
+                    //Look for a linked warp stone //TODO: Get all, not just one
+                    WarpStone destinationStone = repository.findBySignature(oldSignature, new Coords(block.getLocation()), !warpStone.isSource());
+                    if(destinationStone != null) {
+                        playDisableEffect(destinationStone.getBlock());
                     }
                 }
             }
@@ -333,13 +337,32 @@ public class WarpStoneModule implements Listener, SubModule {
         }
     }
 
+    private WarpStoneSignature getWarpSignature(Block block) {
+        return getWarpSignature(block, null);
+    }
+
     /**
      * Return a warp stone signature if a valid one was found bounding the specified block, otherwise null.
      */
-    private WarpStoneSignature getWarpSignature(Block block) {
-        Block[] adjacent = getAdjacentBlocks(block);
+    private WarpStoneSignature getWarpSignature(Block origin, Block excludeBlock) {
+        Block[] adjacent = getAdjacentBlocks(origin);
 
-        if(WarpStoneSignature.validateMaterials(adjacent)) {
+        if(excludeBlock != null) {
+            int rx = excludeBlock.getLocation().getBlockX();
+            int ry = excludeBlock.getLocation().getBlockY();
+            int rz = excludeBlock.getLocation().getBlockZ();
+            for (Block adjacentBlock : adjacent) {
+                int ax = adjacentBlock.getLocation().getBlockX();
+                int ay = adjacentBlock.getLocation().getBlockY();
+                int az = adjacentBlock.getLocation().getBlockZ();
+                if (ax == rx && ay == ry && az == rz) {
+                    //This block is excluded (e.g. pending removal by an event)
+                    return null;
+                }
+            }
+        }
+
+        if(WarpStoneSignature.isSignatureMaterial(adjacent)) {
             return new WarpStoneSignature(adjacent);
         } else {
             return null;
