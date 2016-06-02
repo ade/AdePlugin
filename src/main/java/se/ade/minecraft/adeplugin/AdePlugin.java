@@ -3,7 +3,6 @@ import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.Recipe;
 import org.bukkit.inventory.ShapedRecipe;
 import org.bukkit.plugin.java.JavaPlugin;
-import se.ade.minecraft.adeplugin.blueprints.BlueprintModule;
 import se.ade.minecraft.adeplugin.db.DbConnection;
 import se.ade.minecraft.adeplugin.infrastructure.SubModule;
 import se.ade.minecraft.adeplugin.warpstone.WarpStoneModule;
