@@ -105,7 +105,9 @@ public class WarpStoneModule implements Listener, SubModule {
     public void onEvent(PlayerInteractEvent ev) {
         if(ev.getAction().equals(Action.PHYSICAL)){
             Block block = ev.getClickedBlock();
-            if(block.getType() == Material.STONE_PLATE && block.getRelative(BlockFace.DOWN).getType() == SOURCE_BLOCK_MATERIAL){
+            if(block == null) return;
+
+            if(block.getType() == Material.STONE_PRESSURE_PLATE && block.getRelative(BlockFace.DOWN).getType() == SOURCE_BLOCK_MATERIAL){
                 //Outbound warp stone possibly detected. Check if is a warp stone, and validate adjacent blocks.
                 WarpStoneSignature signature = getWarpSignature(block.getRelative(BlockFace.DOWN));
                 if(signature != null) {
@@ -138,7 +140,7 @@ public class WarpStoneModule implements Listener, SubModule {
         final Player player = event.getPlayer();
 
         event.getPlayer().getWorld().playEffect(player.getLocation(), Effect.MOBSPAWNER_FLAMES, 0);
-        event.getPlayer().getWorld().playSound(player.getLocation(), Sound.ENTITY_ENDERMEN_TELEPORT, 1, 1.2f);
+        event.getPlayer().getWorld().playSound(player.getLocation(), Sound.ENTITY_ENDERMAN_TELEPORT, 1, 1.2f);
 
         target.getWorld().loadChunk((int)(target.getCoords().x >> 4), (int)(target.getCoords().z >> 4), true);
 
@@ -157,7 +159,7 @@ public class WarpStoneModule implements Listener, SubModule {
             @Override
             public void run() {
                 target.getWorld().playEffect(destinationLocation, Effect.MOBSPAWNER_FLAMES, 0);
-                target.getWorld().playSound(destinationLocation, Sound.ENTITY_ENDERMEN_TELEPORT, 1, 1.3f);
+                target.getWorld().playSound(destinationLocation, Sound.ENTITY_ENDERMAN_TELEPORT, 1, 1.3f);
 
                 //Re-teleport to avoid falling(experimental)
                 player.teleport(destinationLocation);
@@ -198,7 +200,7 @@ public class WarpStoneModule implements Listener, SubModule {
                 //Play a linked effect if there is a corresponding warp arrangement.
                 playEnableEffectIfLinked(event.getBlockPlaced(), isSource);
             }
-        } else if(event.getBlockPlaced().getType() == Material.WOOL) {
+        } else if(WarpStoneSignature.isSignatureMaterial(event.getBlockPlaced().getType())) {
             //Search for adjacent warp stones that may have been affected and update them
             updateWarpStoneIfExists(event.getBlockPlaced().getRelative(BlockFace.NORTH), null);
             updateWarpStoneIfExists(event.getBlockPlaced().getRelative(BlockFace.SOUTH), null);
@@ -223,12 +225,12 @@ public class WarpStoneModule implements Listener, SubModule {
         warpBlock.getWorld().playEffect(location, Effect.ENDER_SIGNAL, 0);
 
         final World world = warpBlock.getWorld();
-        world.playSound(location, Sound.ENTITY_ENDERMEN_TELEPORT, 1, 0.7f);
+        world.playSound(location, Sound.ENTITY_ENDERMAN_TELEPORT, 1, 0.7f);
         plugin.getServer().getScheduler().runTaskLater(plugin, new Runnable() {
             @Override
             public void run() {
-                world.playSound(location, Sound.BLOCK_NOTE_BASS, 1f, 0.3f);
-                world.playSound(location, Sound.ENTITY_ENDERDRAGON_GROWL, 0.1f, 0.5f);
+                world.playSound(location, Sound.BLOCK_NOTE_BLOCK_BASS, 1f, 0.3f);
+                world.playSound(location, Sound.ENTITY_ENDER_DRAGON_GROWL, 0.1f, 0.5f);
                 world.playSound(location, Sound.ENTITY_TNT_PRIMED, 1f, 1.1f);
             }
         }, 22);
@@ -273,7 +275,7 @@ public class WarpStoneModule implements Listener, SubModule {
                 event.setCancelled(true);
                 event.getBlock().setType(Material.AIR);
             }
-        } else if(event.getBlock().getType() == Material.WOOL) {
+        } else if(WarpStoneSignature.isSignatureMaterial(event.getBlock().getType())) {
             //Check if a warpstone has been broken in the adjacent blocks
             updateWarpStoneIfExists(event.getBlock().getRelative(BlockFace.NORTH), event.getBlock());
             updateWarpStoneIfExists(event.getBlock().getRelative(BlockFace.EAST), event.getBlock());
@@ -347,8 +349,8 @@ public class WarpStoneModule implements Listener, SubModule {
                 kit[20] = new ItemStack(Material.DIAMOND_PICKAXE, 64);
                 kit[21] = new ItemStack(Material.TORCH, 64);
                 kit[22] = new ItemStack(Material.IRON_INGOT, 64);
-                kit[23] = new ItemStack(Material.STONE_PLATE, 64);
-                kit[24] = new ItemStack(Material.WOOD, 64);
+                kit[23] = new ItemStack(Material.STONE_PRESSURE_PLATE, 64);
+                kit[24] = new ItemStack(Material.OAK_WOOD, 64);
                 kit[25] = getSourceItem();
                 kit[26] = getDestinationItem();
 

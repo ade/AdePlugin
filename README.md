@@ -3,7 +3,7 @@ AdePlugin
 
 a minecraft (craftbukkit) plugin
 
-tested working with CraftBukkit/Spigot 1.9.2
+tested working with CraftBukkit/Spigot 1.13.2
 
 Features
 ========
@@ -33,3 +33,16 @@ Warp placement example:
 ![Warp teleporter recipe](/images/warp_example.png)
 
 As four wool blocks are selected in an unordered fashion from a pool of 16 different colors, the number of possible warp destinations is 3876.
+
+
+Building
+========
+Add a bukkit API jar (such as Spigot-API) to the libs folder.
+Refer to the Spigot website and see their BuildTools for more info. 
+
+Then use gradle to build. You can start a build by running
+```
+./gradlew build
+or
+./gradlew.bat build (windows)
+```

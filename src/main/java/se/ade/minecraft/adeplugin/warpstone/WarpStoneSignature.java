@@ -1,8 +1,8 @@
 package se.ade.minecraft.adeplugin.warpstone;
 
 import org.bukkit.Material;
+import org.bukkit.Tag;
 import org.bukkit.block.Block;
-import org.bukkit.material.Wool;
 
 import java.util.Arrays;
 
@@ -31,10 +31,19 @@ public class WarpStoneSignature {
 
     public static boolean isSignatureMaterial(Block[] materials) {
         for(int i = 0; i < materials.length; i++) {
-            if(materials[i].getType() != Material.WOOL)
+            if(!isSignatureMaterial(materials[i].getType()))
                 return false;
         }
         return true;
+    }
+
+    /**
+     * Returns if a Material matches the type of material used to encode targets/destinations (colored wool)
+     * @param m
+     * @return
+     */
+    public static boolean isSignatureMaterial(Material m) {
+        return Tag.WOOL.isTagged(m);
     }
 
     private String materialsToData(Block[] materials) {
