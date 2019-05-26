@@ -16,7 +16,7 @@ import java.util.logging.Level;
  * Created 2013-12-27 23:07
  */
 public class AdePlugin extends JavaPlugin {
-    public static final String CONFIG_FILE = "plugins\\adeplugin.yml";
+    public static final String CONFIG_FILE = "plugins/adeplugin.yml";
 
     private static AdePlugin instance;
     private DbConnection dbConnection;
