@@ -10,6 +10,7 @@ create table warpstones (
   x int not null,
   y int not null,
   z int not null,
+  yaw float DEFAULT NULL,
   world varchar(255) not null,
   signature varchar(255) default null,
   is_source tinyint(1),

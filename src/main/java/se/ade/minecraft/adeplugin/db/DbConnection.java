@@ -1,8 +1,6 @@
 package se.ade.minecraft.adeplugin.db;
 
-
-import com.mysql.jdbc.CommunicationsException;
-import org.bukkit.plugin.Plugin;
+import se.ade.minecraft.adeplugin.AdePlugin;
 
 import java.sql.*;
 
@@ -12,9 +10,9 @@ import java.sql.*;
  */
 public class DbConnection {
     private Connection connection;
-    private Plugin plugin;
+    private AdePlugin plugin;
 
-    public DbConnection(Plugin plugin) {
+    public DbConnection(AdePlugin plugin) {
         this.plugin = plugin;
     }
 
@@ -64,6 +62,8 @@ public class DbConnection {
 
     public ResultSet query(String query, Object... arguments) {
         try {
+            plugin.debugLog("query: " + query);
+
             return executeAsQuery(query, arguments);
         } catch (SQLException ce) {
             //Retry once since the connection may be restored.
@@ -104,5 +104,19 @@ public class DbConnection {
             }
         }
         return 0;
+    }
+
+    public boolean tableExists(String tableName) throws SQLException {
+        boolean tExists = false;
+        try (ResultSet rs = connection.getMetaData().getTables(null, null, tableName, null)) {
+            while (rs.next()) {
+                String tName = rs.getString("TABLE_NAME");
+                if (tName != null && tName.equals(tableName)) {
+                    tExists = true;
+                    break;
+                }
+            }
+        }
+        return tExists;
     }
 }

@@ -1,12 +1,13 @@
 buildscript {
 	repositories {
+		jcenter()
 		mavenCentral()
 	}
 }
 
 apply plugin: 'java'
 
-version = '1.3'
+version = '1.4'
 
 sourceCompatibility = 1.7
 targetCompatibility = 1.7
@@ -32,4 +33,3 @@ repositories {
 dependencies {
 	compile fileTree(dir: 'libs', include: ['*.jar'])
 }
-

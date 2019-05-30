@@ -17,6 +17,32 @@ public class WarpStoneRepository {
 
     public WarpStoneRepository(DbConnection db) {
         this.db = db;
+        initializeDb();
+    }
+
+    private void initializeDb() {
+        try {
+            if (!db.tableExists("warpstones")) {
+                AdePlugin.get().getLogger().info("Warpstones table does not exist, creating");
+                createTable();
+            }
+        } catch (SQLException e) {
+            sqlError(e);
+        }
+    }
+
+    private void createTable() {
+        db.update("create table warpstones (\n" +
+                "  x int not null,\n" +
+                "  y int not null,\n" +
+                "  z int not null,\n" +
+                "  yaw float DEFAULT NULL,\n" +
+                "  world varchar(255) not null,\n" +
+                "  signature varchar(255) default null,\n" +
+                "  is_source tinyint(1),\n" +
+                "  PRIMARY KEY(x,y,z,world)\n" +
+                ")"
+        );
     }
 
     public WarpStone findByCoords(Block baseBlock) {
