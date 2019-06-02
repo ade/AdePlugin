@@ -44,7 +44,7 @@ public class WarpStoneModule implements Listener, SubModule {
     @Override
     public void onEnable(AdePlugin plugin) {
         this.plugin = plugin;
-        materialMap = new SignatureMaterialMap();
+        materialMap = new SimpleSignatureMaterialMap();
         repository = new WarpStoneRepository(plugin.getDbConnection());
         addWarpStoneRecipe();
         addDestinationStoneRecipe();
