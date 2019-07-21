@@ -23,5 +23,8 @@ public class Coords {
         this.z = (long)location.getZ();
     }
 
-
+    @Override
+    public String toString() {
+        return ("[X:" + x + ",Y:" + y + ",Z:" + z + "]");
+    }
 }

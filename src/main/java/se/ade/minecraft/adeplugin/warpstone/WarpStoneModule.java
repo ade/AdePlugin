@@ -120,14 +120,22 @@ public class WarpStoneModule implements Listener, SubModule {
 
             if(block.getType() == Material.STONE_PRESSURE_PLATE && block.getRelative(BlockFace.DOWN).getType() == SOURCE_BLOCK_MATERIAL){
                 //Outbound warp stone possibly detected. Check if is a warp stone, and validate adjacent blocks.
+                plugin.debugLog("Activated a potential warp stone at " + block.getLocation().getBlockX() + "," + block.getLocation().getBlockY() + "," + block.getLocation().getBlockZ());
                 WarpStoneSignature signature = getWarpSignature(block.getRelative(BlockFace.DOWN), null);
+
                 if(signature != null) {
+                    plugin.debugLog("Found a signature: " + signature.getData());
+
                     WarpStone source = repository.findByCoords(block.getRelative(BlockFace.DOWN));
                     if(source != null && source.isSource()) {
+                        plugin.debugLog("Found a source warpstone! Looking for destination");
                         WarpStone target = repository.findBySignature(signature, new Coords(block.getRelative(BlockFace.DOWN).getLocation()), false);
                         if(target != null) {
+                            plugin.debugLog("Destination found at" + target.getCoords());
                             teleport(ev, target);
                         }
+                    } else {
+                        plugin.debugLog("Destination not found or current warpstone is not a source block in DB");
                     }
                 }
             }
